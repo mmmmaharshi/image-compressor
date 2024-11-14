@@ -1,0 +1,145 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout title="Image Compressor">
+  <main
+    class="min-h-screen container mx-auto max-w-screen-lg py-20 px-4 w-full overflow-auto flex flex-col items-center justify-center"
+  >
+    <header class="flex text-center flex-col items-center gap-5">
+      <h1 class="text-5xl font-bold flex flex-col items-center gap-5">
+        <span>🖼️</span> Image Compressor
+      </h1>
+      <p class="text-pretty text-center mt-2">
+        Upload an image, set your target file size, and download the compressed
+        version.
+      </p>
+      <input
+        type="file"
+        id="imageInput"
+        class="file-input mt-3 file-input-bordered"
+        accept="image/*"
+        class="hidden"
+      />
+    </header>
+    <div class="h-full w-full">
+      <section id="settings" class="flex-col hidden mt-8 gap-4 items-center">
+        <label for="sizeInput">Target Size (KB):</label>
+        <input
+          type="number"
+          id="sizeInput"
+          min="1"
+          value="50"
+          class="input input-bordered"
+        />
+        <button id="compressBtn" class="btn btn-primary">
+          Compress Image
+        </button>
+      </section>
+
+      <section
+        id="preview"
+        class="mt-16 hidden flex-col items-center justify-center"
+      >
+        <div class="flex gap-5 items-center justify-center">
+          <div class="flex flex-col items-center">
+            <h3>Original</h3>
+            <p id="originalSize" class="font-medium"></p>
+
+            <div class="divider"></div>
+            <img
+              id="originalPreview"
+              class="aspect-square object-cover size-80"
+              alt="Original Image"
+            />
+          </div>
+          <div class="flex flex-col items-center">
+            <h3>Compressed</h3>
+            <p id="compressedSize" class="font-medium"></p>
+            <div class="divider"></div>
+
+            <img
+              id="compressedPreview"
+              class="aspect-square object-cover size-80"
+              alt="Compressed Image"
+            />
+          </div>
+        </div>
+
+        <button id="downloadBtn" class="btn btn-neutral mt-10 mx-auto" disabled>
+          Download Compressed Image
+        </button>
+      </section>
+    </div>
+  </main>
+</Layout>
+
+<script>
+  import { compressImage, formatFileSize } from "../lib/utils";
+
+  let compressedBlob: Blob | null = null;
+
+  const imageInput = document.getElementById("imageInput") as HTMLInputElement;
+  const sizeInput = document.getElementById("sizeInput") as HTMLInputElement;
+  const preview = document.getElementById("preview") as HTMLInputElement;
+  const settings = document.getElementById("settings") as HTMLInputElement;
+
+  const originalPreview = document.getElementById(
+    "originalPreview"
+  ) as HTMLImageElement;
+  const compressedPreview = document.getElementById(
+    "compressedPreview"
+  ) as HTMLImageElement;
+  const originalSize = document.getElementById(
+    "originalSize"
+  ) as HTMLParagraphElement;
+  const compressedSize = document.getElementById(
+    "compressedSize"
+  ) as HTMLParagraphElement;
+  const downloadBtn = document.getElementById(
+    "downloadBtn"
+  ) as HTMLButtonElement;
+  const compressBtn = document.getElementById(
+    "compressBtn"
+  ) as HTMLButtonElement;
+
+  imageInput.addEventListener("change", async (e) => {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+
+    originalPreview.src = URL.createObjectURL(file);
+    originalSize.textContent = `Size: ${formatFileSize(file.size)}`;
+
+    const targetSize = parseInt(sizeInput.value);
+    compressedBlob = await compressImage(file, targetSize);
+    compressedPreview.src = URL.createObjectURL(compressedBlob);
+    compressedSize.textContent = `Size: ${formatFileSize(compressedBlob.size)}`;
+
+    downloadBtn.disabled = false;
+    preview.style.display = "flex";
+    settings.style.display = "flex";
+  });
+
+  compressBtn.addEventListener("click", async () => {
+    if (!imageInput.files?.[0]) return;
+
+    compressBtn.disabled = true;
+
+    const targetSize = parseInt(sizeInput.value);
+    compressedBlob = await compressImage(imageInput.files[0], targetSize);
+    compressedPreview.src = URL.createObjectURL(compressedBlob);
+    compressedSize.textContent = `Size: ${formatFileSize(compressedBlob.size)}`;
+
+    compressBtn.disabled = false;
+    downloadBtn.disabled = false;
+  });
+
+  downloadBtn.addEventListener("click", () => {
+    if (!compressedBlob) return;
+
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(compressedBlob);
+    link.download = "compressed-image.jpg";
+    link.click();
+  });
+</script>
