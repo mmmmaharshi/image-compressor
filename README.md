@@ -1,38 +1,111 @@
 # Simple Image Compressor
 
-## Overview
+[![Astro](https://img.shields.io/badge/Astro-FF5A1F?style=for-the-badge&logo=astro)](https://astro.build/) [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![daisyUI](https://img.shields.io/badge/daisyUI-56B3FA?style=for-the-badge&logo=daisyui&logoColor=white)](https://daisyui.com/)
+[![Vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://vercel.com/)
 
-This project is an Image Compressor web application built using Astro. It allows users to upload an image, set a target file size, and download the compressed version.
+A lightweight **Image Compressor** web application built with **Astro**. This app allows users to upload images, set a target file size, and download a compressed version, all with a seamless and intuitive interface.
 
-For a live demo, visit the [Simple Image Compressor](https://simple-image-compress.vercel.app/) website.
+Check out the live demo of the app at [Simple Image Compressor](https://simple-image-compress.vercel.app/).
+
+---
 
 ## Features
 
-- Upload images directly from your device.
-- Specify the desired file size for compression.
-- Preview original and compressed images.
-- Download the compressed image with a single click.
+- **Image Upload**: Upload images directly from your device.
+- **Compression Control**: Set a desired file size for the image compression.
+- **Live Preview**: View both the original and compressed images side by side.
+- **One-Click Download**: Download the compressed image in a single click.
+
+---
 
 ## Technologies Used
 
-- **Astro**: A modern web framework for building fast websites.
-- **Tailwind CSS**: A utility-first CSS framework for styling.
-- **DaisyUI**: A plugin for Tailwind CSS providing additional UI components.
-- **TypeScript**: A superset of JavaScript providing static typing.
+- **Astro**: Modern static site generator for fast, optimized websites.
+- **Tailwind CSS**: Utility-first CSS framework for fast and responsive styling.
+- **DaisyUI**: Tailwind CSS plugin offering ready-made UI components for faster development.
+- **TypeScript**: Superset of JavaScript adding static typing for better code quality and maintainability.
+- **Vercel**: Platform for deploying static sites with automatic scaling and fast performance.
 
-## How to Use
+---
 
-1. Open [Simple Image Compressor](https://simple-image-compress.vercel.app/) in your browser.
-2. Upload an image using the file input.
-3. Set your desired target size in KB.
-4. Click "Compress Image" to compress the uploaded image.
-5. View the original and compressed images side by side.
-6. Click "Download Compressed Image" to save the compressed version to your device.
+## Compress Image Function
 
-## License
+The core of the app is the `compressImage` function. You can view the code for this function in the [utils.ts file on GitHub](https://github.com/mmmmaharshi/image-compressor/blob/bb517c50cfe558afac69991417f787d1ed5eaacf/src/lib/utils.ts#L9).
 
-This project is licensed under the MIT License.
+Here's the full function code for reference:
 
-## Contact
+```typescript
+// utils.ts
+export async function compressImage(
+  file: File,
+  targetSizeKB: number
+): Promise<Blob> {
+  const targetSizeBytes = targetSizeKB * 1024;
+  let quality = 1.0;
+  let compressedFile: File;
 
-For any inquiries or feedback, you can reach out to me via [X (Twitter)](https://twitter.com/mmmmaharshi).
+  const createImage = (url: string): Promise<HTMLImageElement> =>
+    new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = url;
+    });
+
+  const blobToFile = async (blob: Blob): Promise<File> => {
+    const buffer = await blob.arrayBuffer();
+    return new File([buffer], file.name, { type: blob.type });
+  };
+
+  const compress = async (img: HTMLImageElement, q: number): Promise<Blob> => {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+
+    if (!ctx) throw new Error("Canvas context not available");
+
+    let width = img.width;
+    let height = img.height;
+    const maxDimension = 1920;
+
+    if (width > maxDimension || height > maxDimension) {
+      if (width > height) {
+        height = (height * maxDimension) / width;
+        width = maxDimension;
+      } else {
+        width = (width * maxDimension) / height;
+        height = maxDimension;
+      }
+    }
+
+    canvas.width = width;
+    canvas.height = height;
+    ctx.drawImage(img, 0, 0, width, height);
+
+    return new Promise((resolve) => {
+      canvas.toBlob((blob) => resolve(blob as Blob), "image/jpeg", q);
+    });
+  };
+
+  const img = await createImage(URL.createObjectURL(file));
+
+  let min = 0;
+  let max = 1;
+  let lastValid: Blob | null = null;
+
+  while (min <= max) {
+    quality = (min + max) / 2;
+    const blob = await compress(img, quality);
+    compressedFile = await blobToFile(blob);
+
+    if (compressedFile.size > targetSizeBytes) {
+      max = quality - 0.1;
+    } else {
+      lastValid = blob;
+      min = quality + 0.1;
+    }
+  }
+
+  return lastValid || (await compress(img, 0.1));
+}
+```
