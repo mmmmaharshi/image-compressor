@@ -1,28 +1,29 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import { Icon } from "astro-icon/components";
 ---
 
-<Layout title="Image Compressor">
-  <main
-    class="min-h-screen container mx-auto max-w-screen-lg py-20 px-4 w-full overflow-auto flex flex-col items-center justify-center"
-  >
-    <header class="flex text-center flex-col items-center gap-5">
-      <h1 class="text-5xl font-bold flex flex-col items-center gap-5">
-        <span>🖼️</span> Image Compressor
-      </h1>
-      <p class="text-pretty text-center mt-2">
-        Upload an image, set your target file size, and download the compressed
-        version.
-      </p>
-      <input
-        type="file"
-        id="imageInput"
-        class="file-input mt-3 file-input-bordered"
-        accept="image/*"
-        class="hidden"
-      />
-    </header>
-    <div class="h-full w-full">
+<Layout title="Simple Image Compressor">
+  <main class="min-h-screen flex flex-col items-center">
+    <article
+      class="container flex-1 h-full mx-auto max-w-screen-lg py-20 px-4 w-full overflow-auto flex flex-col items-center justify-center"
+    >
+      <header class="flex text-center flex-col items-center gap-5">
+        <h1 class="text-5xl font-bold flex flex-col items-center gap-5">
+          <span>🖼️</span> Image Compressor
+        </h1>
+        <p class="text-pretty text-center mt-2">
+          Upload an image, set your target file size, and download the
+          compressed version.
+        </p>
+        <input
+          type="file"
+          id="imageInput"
+          class="file-input mt-3 file-input-bordered"
+          accept="image/*"
+          class="hidden"
+        />
+      </header>
       <section id="settings" class="flex-col hidden mt-8 gap-4 items-center">
         <label for="sizeInput">Target Size (KB):</label>
         <input
@@ -41,7 +42,9 @@ import Layout from "../layouts/Layout.astro";
         id="preview"
         class="mt-16 hidden flex-col items-center justify-center"
       >
-        <div class="flex gap-5 items-center justify-center">
+        <div
+          class="flex md:flex-row flex-col-reverse gap-7 md:gap-5 items-center justify-center"
+        >
           <div class="flex flex-col items-center">
             <h3>Original</h3>
             <p id="originalSize" class="font-medium"></p>
@@ -70,6 +73,35 @@ import Layout from "../layouts/Layout.astro";
           Download Compressed Image
         </button>
       </section>
+    </article>
+    <div class="flex items-center py-4 gap-2">
+      <p>Built with</p>
+      <a
+        href="https://astro.build/"
+        target="_blank"
+        rel="noopener"
+        class="flex items-center gap-2"
+      >
+        <Icon name="astro" size={25} color="white" />
+        by
+        <a
+          href="https://x.com/mmmmaharshi"
+          target="_blank"
+          rel="noopener"
+          class="link"
+        >
+          Manohar
+        </a>
+
+        – Find it on</a
+      >
+      <a
+        href="https://github.com/mmmmaharshi/image-compressor"
+        target="_blank"
+        rel="noopener"
+      >
+        <Icon name="github" size={25} color="white" />
+      </a>
     </div>
   </main>
 </Layout>
